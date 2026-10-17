@@ -1,53 +1,59 @@
-# REGAL BANDIT POPSTAR
+# CLEVELAND BOY ADVENTURES
 
-An 8-bit Cleveland pull-over. A Sicilian popstar in an orange headband and a bandit eye mask, guitar on his back, drives a white Buick Regal at 2 AM, smoking and sipping a tall boy. The cops light him up. Snitch on Lukey? Blame Tom B? Keep the code? 15 endings.
+An 8-bit Cleveland adventure. A Sicilian popstar in an orange headband and a bandit eye mask, guitar on his back, drives a white Buick Regal at 2 AM. He gets pulled over. Snitch on Lukey? Blame Tom B? Keep the code? Then go home and fight the final boss: nAna.
 
-Flask serves one HTML page. The game runs in the browser and works on phones. Flask also keeps a global "what % of players got this ending" counter.
+18 endings, a leaderboard saved to a JSON file, and controls drawn right inside the game screen so nothing gets cut off on a phone (portrait or landscape).
 
 ```
-app.py              Flask server (page + tiny stats API)
-index.html          the whole game (canvas pixel art, chiptune audio, story)
+index.html          the whole game (pixel art, chiptune audio, story, boss fight)
+app.py              Flask server: serves the game + saves the leaderboard to leaderboard.json
 og.png              link-preview image shown when you text the URL
 requirements.txt    Flask + gunicorn
 render.yaml         one-click Render blueprint
 Procfile            for Heroku-style hosts
 ```
 
+`leaderboard.json` is created automatically the first time someone submits a score. It holds the top scores and how many players got each ending. The server recalculates every score itself, so nobody can post a fake one.
+
 ## Run it locally
 
-```bash
+```
 pip install -r requirements.txt
 python app.py          # http://localhost:5000
 ```
 
-## Host it free, option A: Render (recommended)
-
-1. Put this folder in a GitHub repo (github.com > New repository > upload the files).
-2. render.com > sign up with GitHub > **New +** > **Blueprint** > pick the repo. (Or **New Web Service**, runtime Python, build `pip install -r requirements.txt`, start `gunicorn app:app --workers 1 --threads 4`.)
-3. In a couple of minutes you get `https://regal-bandit-popstar.onrender.com`. Text that link.
-
-Free-tier facts: the service sleeps after 15 minutes idle and the first visit afterward takes about 30-60 seconds to wake. The ending-percentage counter is kept on a disk that resets on every redeploy or restart, so it starts over. The game itself never depends on it.
-
-Optional: make a free UptimeRobot monitor that pings `/healthz` every 5 minutes so it stays awake.
-
-## Host it free, option B: PythonAnywhere
+## Host it free, option A: PythonAnywhere (recommended: shared leaderboard that never sleeps)
 
 1. pythonanywhere.com > create a free **Beginner** account.
-2. **Web** tab > **Add a new web app** > Flask > Python 3.x.
-3. Upload `app.py`, `index.html` and `og.png` into the web app's folder (replace the sample `flask_app.py`, or point the WSGI file at `app`).
-4. Hit **Reload**. Your link is `https://YOURNAME.pythonanywhere.com`.
+2. **Files** tab > open your home folder > make a folder `mysite` > upload `app.py`, `index.html` and `og.png` into it.
+3. **Web** tab > **Add a new web app** > **Manual configuration** (or Flask) > Python 3.x.
+4. On the Web tab open the **WSGI configuration file**, delete what is there and paste (use your real username):
+   ```python
+   import sys
+   path = '/home/YOURNAME/mysite'
+   if path not in sys.path:
+       sys.path.insert(0, path)
+   from app import app as application
+   ```
+5. Hit the green **Reload** button. Your link is `https://YOURNAME.pythonanywhere.com`. Scores save to `/home/YOURNAME/mysite/leaderboard.json`.
 
-Free-tier facts: it doesn't sleep, but the free web app has to be re-extended every 3 months from the Web tab, and the free plan has one web app only.
+Free-tier facts: it doesn't sleep, but you must press the **Run until 3 months from today** button on the Web tab every few months or the site is turned off. One web app only.
 
-## Texting it
+## Host it free, option B: GitHub Pages (no server)
 
-Send the link. iMessage and WhatsApp show the preview image (`og.png`) and title. The end screen has a **CHALLENGE A FRIEND** button that opens the phone's share sheet.
+Put `index.html` and `og.png` in a public GitHub repo and turn on Pages (Settings > Pages > main / root). The game works fully, but there is no server to save a shared leaderboard, so each phone keeps its own scores in a JSON list in its browser.
+
+To share one leaderboard while using Pages, host `app.py` on PythonAnywhere (option A) and, in `index.html`, change the line near the top of the leaderboard section from `const API_BASE='';` to `const API_BASE='https://YOURNAME.pythonanywhere.com';`.
+
+## Host it free, option C: Render
+
+New > Blueprint > pick the repo. The free plan sleeps after 15 idle minutes and its disk resets on every redeploy, so the leaderboard file starts over each time. PythonAnywhere is better for the leaderboard.
 
 ## Controls
 
 - Tap or Space/Enter advances dialogue. Number keys or taps pick choices.
-- Driving: tap top/bottom of the screen or the arrow buttons (or W/S/arrows) to change lanes. Pierogies and golden picks raise STREET CRED. Potholes and cones hurt.
-- Lie detector: tap when the needle is in the green.
-- Some choices need enough STREET CRED (e.g. the guitar solo needs 5+), so grab pierogies.
+- Driving: tap the arrow buttons on the screen, swipe up/down, or tap the top/bottom half of the screen (keyboard: W/S or arrow keys). Pierogies = cred. Potholes and cones hurt.
+- Lie detector: tap the button when the needle is in the green.
+- Final boss (unlocks after any good ending): arrows move, THROW (Space) throws a beer can when her purse is down, LUKEY (L) blames Lukey for a few seconds of double damage. Weed leaves and cigarettes heal you.
 
 Fiction, for laughs. Don't drink and drive in real life.
